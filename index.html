@@ -1,65 +1,538 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Diagrammer – IaC to architecture, cost and risk</title>
-<style>
-:root{--bg:#f6f5f1;--surface:#fff;--cv:#fbfaf7;--ink:#1c1b19;--mute:#76736b;--line:#e4e1d9;--acc:#4f46e5;--acc-ink:#fff;--chip:#eeece6;--crit:#dc2626;--warn:#d97706;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121211;--surface:#1b1b19;--cv:#161614;--ink:#f0eee8;--mute:#9a968c;--line:#2e2d2a;--acc:#818cf8;--acc-ink:#12121a;--chip:#262522;color-scheme:dark}}
-:root[data-theme="dark"]{--bg:#121211;--surface:#1b1b19;--cv:#161614;--ink:#f0eee8;--mute:#9a968c;--line:#2e2d2a;--acc:#818cf8;--acc-ink:#12121a;--chip:#262522;color-scheme:dark}
-*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
-body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
-.wrap{max-width:1280px;margin:0 auto;padding:16px}
-.top{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
-.logo{font-weight:700;font-size:18px;letter-spacing:-.02em;margin-right:8px}.logo b{color:var(--acc)}
-button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:9px;padding:6px 12px}
-button:hover:not(:disabled){border-color:var(--acc)}button:disabled{opacity:.45;cursor:not-allowed}
-.on{background:var(--acc);color:var(--acc-ink);border-color:var(--acc)}
-.sp{flex:1}
-.grid{display:grid;grid-template-columns:minmax(280px,38%) 1fr;gap:12px}
-@media(max-width:820px){.grid{grid-template-columns:1fr}}
-.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
-textarea{display:block;width:100%;height:540px;border:0;resize:vertical;padding:14px;background:transparent;color:var(--ink);font:12.5px/1.55 ui-monospace,SFMono-Regular,Menlo,monospace;outline:none;tab-size:2}
-#err{padding:8px 14px;color:var(--crit);font-size:12.5px;border-top:1px solid var(--line);display:none}
-#canvas{height:540px;background:var(--cv);cursor:grab;touch-action:none;position:relative}
-#canvas:active{cursor:grabbing}#canvas svg{width:100%;height:100%;display:block}
-.hint{position:absolute;left:12px;bottom:8px;font-size:11.5px;color:var(--mute);pointer-events:none}
-.sum{display:grid;grid-template-columns:1fr 1.4fr;gap:12px;margin-top:12px}
-@media(max-width:820px){.sum{grid-template-columns:1fr}}
-.card{padding:16px}.card h3{margin:0 0 10px;font-size:12px;text-transform:uppercase;letter-spacing:.07em;color:var(--mute)}
-.big{font-size:34px;font-weight:700;letter-spacing:-.03em}.big small{font-size:14px;color:var(--mute);font-weight:400}
-.cr{display:grid;grid-template-columns:1fr 70px;gap:8px;align-items:center;margin:7px 0;font-size:13px}
-.cr span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.bar{height:5px;background:var(--chip);border-radius:9px;overflow:hidden;grid-column:1/-1;margin-top:-4px}.bar i{display:block;height:100%;background:var(--acc)}
-.fi{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:13px}.fi:last-child{border:0}
-.tag{flex:none;font-size:10.5px;font-weight:700;text-transform:uppercase;border-radius:5px;padding:2px 6px;height:max-content;color:#fff}
-.t-crit{background:var(--crit)}.t-warn{background:var(--warn)}.t-info{background:#64748b}
-.fi b{font-weight:600}.mut{color:var(--mute);font-size:12.5px}
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Diagrammer: read your infrastructure at a glance</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap">
+  <style>
+    /* hallmark: v2.0.0 | shape: workbench | theme: graphite, custom | genre: modern-minimal | signature: the live topology with risk badges | draw: manual */
+    /* critique: no centred hero, no purple accent, no tracked-caps labels, no card inside a card; one teal signal on warm neutrals, Geist and Geist Mono */
+    :root {
+      --bg: #f1f0ec;
+      --panel: #f8f7f4;
+      --cv: #fcfbf9;
+      --ink: #1d1c1a;
+      --mute: #6f6c64;
+      --line: #dedbd2;
+      --dot: #d6d2c7;
+      --chip: #ebe9e3;
+      --acc: #17806a;
+      --on: #f8f7f4;
+      --crit: #c0443a;
+      --warn: #a8741a;
+      --info: #6d7a88;
+      --k-compute: #5f7fa8;
+      --k-db: #3f8f7e;
+      --k-storage: #b58a3c;
+      --k-lb: #a9627a;
+      --k-net: #7d8794;
+      --k-cache: #8a6fa8;
+      --k-queue: #4f95a8;
+      --k-other: #8c8a84;
+      --sans: 'Geist', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+      --mono: 'Geist Mono', ui-monospace, Menlo, monospace;
+      --r1: 16px;
+      --r2: 9px;
+      --ease: cubic-bezier(.16, 1, .3, 1);
+      box-sizing: border-box;
+      padding-top: env(safe-area-inset-top, 0px);
+      padding-bottom: env(safe-area-inset-bottom, 0px)
+    }
+
+    @media (prefers-color-scheme:dark) {
+      :root:not([data-theme="light"]) {
+        --bg: #131311;
+        --panel: #1a1a17;
+        --cv: #161614;
+        --ink: #eeece6;
+        --mute: #9a968b;
+        --line: #2b2a26;
+        --dot: #2c2b27;
+        --chip: #232320;
+        --acc: #4cc3a4;
+        --on: #10201c;
+        --crit: #e0675c;
+        --warn: #d4a04a;
+        --info: #8d9aa8;
+        color-scheme: dark
+      }
+    }
+
+    :root[data-theme="dark"] {
+      --bg: #131311;
+      --panel: #1a1a17;
+      --cv: #161614;
+      --ink: #eeece6;
+      --mute: #9a968b;
+      --line: #2b2a26;
+      --dot: #2c2b27;
+      --chip: #232320;
+      --acc: #4cc3a4;
+      --on: #10201c;
+      --crit: #e0675c;
+      --warn: #d4a04a;
+      --info: #8d9aa8;
+      color-scheme: dark
+    }
+
+    * {
+      box-sizing: border-box
+    }
+
+    html,
+    body {
+      overflow-x: clip
+    }
+
+    html {
+      scroll-padding-top: env(safe-area-inset-top, 0px)
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font: 15px/1.55 var(--sans);
+      -webkit-font-smoothing: antialiased
+    }
+
+    .wrap {
+      max-width: 1360px;
+      margin: 0 auto;
+      padding: 0 28px 56px
+    }
+
+    .bar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      height: 62px
+    }
+
+    .mark {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      font-weight: 600;
+      letter-spacing: -.01em;
+      color: var(--ink);
+      text-decoration: none
+    }
+
+    .sp {
+      flex: 1
+    }
+
+    .mut {
+      color: var(--mute);
+      font-size: 13.5px
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+      gap: 32px;
+      align-items: end;
+      padding: 26px 0 28px
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(32px, 4.4vw, 56px);
+      line-height: 1.02;
+      letter-spacing: -.035em;
+      font-weight: 600;
+      max-width: 13ch;
+      overflow-wrap: break-word;
+      min-width: 0
+    }
+
+    .hr {
+      display: grid;
+      gap: 16px;
+      min-width: 0
+    }
+
+    .hr p {
+      margin: 0;
+      color: var(--mute);
+      font-size: 16px;
+      max-width: 38ch
+    }
+
+    .btn,
+    .seg button {
+      font: inherit;
+      font-size: 13.5px;
+      cursor: pointer;
+      border: 1px solid var(--line);
+      background: transparent;
+      color: var(--ink);
+      border-radius: var(--r2);
+      padding: 6px 12px;
+      transition: background-color .2s var(--ease), border-color .2s var(--ease), transform .2s var(--ease), opacity .2s var(--ease)
+    }
+
+    .btn:hover:not(:disabled),
+    .seg button:hover {
+      background: var(--chip)
+    }
+
+    .btn:active:not(:disabled),
+    .seg button:active {
+      transform: translateY(1px) scale(.98)
+    }
+
+    .btn:disabled {
+      opacity: .4;
+      cursor: not-allowed
+    }
+
+    .btn.pri,
+    .seg button.on {
+      background: var(--acc);
+      border-color: var(--acc);
+      color: var(--on);
+      font-weight: 500
+    }
+
+    :is(.btn, .seg button, textarea, a):focus-visible {
+      outline: 2px solid var(--acc);
+      outline-offset: 2px
+    }
+
+    .seg {
+      display: inline-flex;
+      gap: 4px;
+      padding: 4px;
+      border: 1px solid var(--line);
+      border-radius: calc(var(--r2) + 4px);
+      width: max-content;
+      max-width: 100%;
+      flex-wrap: wrap
+    }
+
+    .seg button {
+      border-color: transparent
+    }
+
+    .bench {
+      display: grid;
+      grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+      gap: 14px
+    }
+
+    .pane {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--r1);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      min-width: 0
+    }
+
+    .tb {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 8px 7px 16px;
+      border-bottom: 1px solid var(--line);
+      font-size: 13.5px;
+      color: var(--mute);
+      min-height: 48px
+    }
+
+    .vr {
+      width: 1px;
+      height: 18px;
+      background: var(--line);
+      margin: 0 4px
+    }
+
+    textarea {
+      display: block;
+      width: 100%;
+      height: 520px;
+      border: 0;
+      resize: vertical;
+      padding: 16px;
+      background: transparent;
+      color: var(--ink);
+      font: 13px/1.65 var(--mono);
+      outline: none;
+      tab-size: 2
+    }
+
+    #err {
+      display: none;
+      padding: 10px 16px;
+      color: var(--crit);
+      font-size: 13.5px;
+      border-top: 1px solid var(--line)
+    }
+
+    #canvas {
+      position: relative;
+      height: 520px;
+      background-color: var(--cv);
+      background-image: radial-gradient(var(--dot) 1px, transparent 1px);
+      background-size: 22px 22px;
+      cursor: grab;
+      touch-action: none
+    }
+
+    #canvas:active {
+      cursor: grabbing
+    }
+
+    #canvas svg {
+      width: 100%;
+      height: 100%;
+      display: block
+    }
+
+    .enter {
+      animation: rise .6s var(--ease) both
+    }
+
+    @keyframes rise {
+      from {
+        opacity: 0;
+        transform: translateY(8px)
+      }
+    }
+
+    .hint {
+      position: absolute;
+      left: 14px;
+      bottom: 10px;
+      font-size: 12.5px;
+      color: var(--mute);
+      pointer-events: none
+    }
+
+    .empty {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-content: center;
+      gap: 4px;
+      padding: 24px;
+      color: var(--mute);
+      text-align: left
+    }
+
+    .empty[hidden] {
+      display: none
+    }
+
+    .empty b {
+      color: var(--ink);
+      font-size: 16px;
+      font-weight: 600
+    }
+
+    .sum {
+      display: grid;
+      grid-template-columns: minmax(0, 4fr) minmax(0, 8fr);
+      gap: 14px;
+      margin-top: 14px
+    }
+
+    .card {
+      padding: 20px 22px
+    }
+
+    .card h2 {
+      margin: 0 0 14px;
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: -.01em
+    }
+
+    .big {
+      font: 500 46px/1 var(--mono);
+      letter-spacing: -.04em;
+      font-variant-numeric: tabular-nums
+    }
+
+    .big span {
+      font: 400 14px var(--sans);
+      letter-spacing: 0;
+      color: var(--mute);
+      margin-left: 8px
+    }
+
+    .card p {
+      margin: 8px 0 0
+    }
+
+    .cr {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 4px 12px;
+      padding: 10px 0;
+      border-top: 1px solid var(--line);
+      font-size: 14px
+    }
+
+    .cr .nm {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap
+    }
+
+    .cr small {
+      margin-left: 8px;
+      color: var(--mute);
+      font-size: 12.5px
+    }
+
+    .amt {
+      font-family: var(--mono);
+      font-variant-numeric: tabular-nums
+    }
+
+    .cr i {
+      grid-column: 1/-1;
+      display: block;
+      height: 3px;
+      border-radius: 3px;
+      background: var(--acc);
+      opacity: .85
+    }
+
+    .fi {
+      display: grid;
+      grid-template-columns: 76px minmax(0, 1fr);
+      gap: 12px;
+      padding: 12px 0;
+      border-top: 1px solid var(--line);
+      font-size: 14px
+    }
+
+    .fi p {
+      margin: 2px 0 0;
+      color: var(--mute);
+      font-size: 13.5px
+    }
+
+    .fi b {
+      font-weight: 600
+    }
+
+    .s {
+      font-weight: 600;
+      font-size: 13.5px
+    }
+
+    .s-crit {
+      color: var(--crit)
+    }
+
+    .s-warn {
+      color: var(--warn)
+    }
+
+    .s-info {
+      color: var(--info)
+    }
+
+    @media(max-width:860px) {
+
+      .hero,
+      .bench,
+      .sum {
+        grid-template-columns: minmax(0, 1fr)
+      }
+
+      .wrap {
+        padding: 0 16px 40px
+      }
+
+      textarea,
+      #canvas {
+        height: 420px
+      }
+
+      .hero {
+        padding-top: 12px
+      }
+    }
+
+    @media (prefers-reduced-motion:reduce) {
+      * {
+        animation: none !important;
+        transition: none !important
+      }
+    }
+  </style>
 </head>
+
 <body>
-<div class="wrap">
-<div class="top">
-  <div class="logo">◇ Diagram<b>mer</b></div>
-  <button data-s="tf" class="on">Terraform</button><button data-s="dc">docker-compose</button><button data-s="k8">Kubernetes</button>
-  <span class="sp"></span>
-  <button id="fit">Fit</button><button id="esvg" disabled>Export SVG</button><button id="epng" disabled>Export PNG</button>
-</div>
-<div class="grid">
-  <div class="panel"><textarea id="src" spellcheck="false" aria-label="Infrastructure code"></textarea><div id="err"></div></div>
-  <div class="panel"><div id="canvas"><span class="hint">Scroll to zoom · drag to pan</span></div></div>
-</div>
-<div class="sum">
-  <div class="panel card"><h3>Estimated monthly cost</h3><div id="cost"></div></div>
-  <div class="panel card"><h3>Exposure &amp; risk findings</h3><div id="finds"></div></div>
-</div>
-</div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
-<script>
-const $=s=>document.querySelector(s);
-const SAMPLES={
-tf:`resource "aws_vpc" "main" {
+  <div class="wrap">
+    <nav class="bar" aria-label="Primary">
+      <a class="mark" href="#"><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true">
+          <rect x="1" y="9" width="7" height="7" rx="2" fill="var(--acc)" />
+          <rect x="16" y="2" width="7" height="7" rx="2" fill="var(--k-compute)" />
+          <rect x="16" y="15" width="7" height="7" rx="2" fill="var(--k-db)" />
+          <path d="M8 12.5h3.5V5.5H16M11.5 12.5v6H16" fill="none" stroke="var(--mute)" stroke-width="1.5" />
+        </svg>Diagrammer</a>
+      <span class="sp"></span><span class="mut">Runs in your browser. Nothing is uploaded.</span>
+    </nav>
+    <header class="hero">
+      <h1>Read your infrastructure at a glance.</h1>
+      <div class="hr">
+        <p>Paste Terraform, Compose or Kubernetes and see topology, cost and risk.</p>
+        <div class="seg" role="group" aria-label="Load a sample"><button class="on" data-s="tf"
+            aria-pressed="true">Terraform</button><button data-s="dc" aria-pressed="false">Compose</button><button
+            data-s="k8" aria-pressed="false">Kubernetes</button></div>
+      </div>
+    </header>
+    <main class="bench">
+      <section class="pane" aria-label="Source">
+        <div class="tb"><span id="fn">main.tf</span></div><textarea id="src" spellcheck="false"
+          aria-label="Infrastructure code"></textarea>
+        <div id="err" role="alert"></div>
+      </section>
+      <section class="pane" aria-label="Diagram">
+        <div class="tb"><span>Topology</span><span class="sp"></span>
+          <button class="btn" id="zout" aria-label="Zoom out">−</button><button class="btn" id="zin"
+            aria-label="Zoom in">+</button><button class="btn" id="fit">Fit</button><span class="vr"></span>
+          <button class="btn" id="esvg" disabled>Export SVG</button><button class="btn pri" id="epng" disabled>Export
+            PNG</button>
+        </div>
+        <div id="canvas">
+          <div class="empty" id="empty" hidden><b>Nothing to draw yet</b><span>Paste Terraform, Compose or Kubernetes on
+              the left.</span></div><span class="hint">Scroll to zoom, drag to pan.</span>
+        </div>
+      </section>
+    </main>
+    <div class="sum">
+      <section class="pane card">
+        <h2>Monthly cost</h2>
+        <div id="cost"></div>
+      </section>
+      <section class="pane card">
+        <h2>Findings</h2>
+        <div id="finds"></div>
+      </section>
+    </div>
+    <noscript>
+      <p class="mut">Diagrammer needs JavaScript to draw the diagram.</p>
+    </noscript>
+  </div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
+  <script>
+    const $ = s => document.querySelector(s);
+    const SAMPLES = {
+      tf: `resource "aws_vpc" "main" {
   cidr_block = "10.0.0.0/16"
 }
 resource "aws_subnet" "public" {
@@ -99,7 +572,7 @@ resource "aws_s3_bucket" "assets" {
 resource "aws_nat_gateway" "nat" {
   subnet_id = aws_subnet.public.id
 }`,
-dc:`services:
+      dc: `services:
   proxy:
     image: nginx:1.25
     ports: ["80:80", "443:443"]
@@ -122,7 +595,7 @@ dc:`services:
   queue:
     image: rabbitmq:3
     privileged: true`,
-k8:`apiVersion: networking.k8s.io/v1
+      k8: `apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata: {name: web}
 spec:
@@ -169,154 +642,187 @@ spec:
         image: postgres:16
         securityContext: {privileged: true}`};
 
-const KC={compute:'#6366f1',db:'#0d9488',storage:'#d97706',lb:'#db2777',net:'#64748b',cache:'#7c3aed',queue:'#0891b2',other:'#78716c'};
-const mk=()=>({nodes:new Map(),edges:[],warns:[]});
-const addN=(g,id,o)=>g.nodes.set(id,Object.assign({id,label:id,sub:'',kind:'other',cost:0,pub:false,w:[]},o));
-const warn=(g,id,sev,msg)=>{const n=g.nodes.get(id);if(n)n.w.push({sev,msg});g.warns.push({label:n?n.label:id,sev,msg})};
-const imgWarn=(g,id,img)=>{if(img&&(!/:[^/:]+$/.test(img)||/:latest$/.test(img)))warn(g,id,'info','Image “'+img+'” is not pinned to a version')};
+    const KC = k => css('--k-' + k);
+    const mk = () => ({ nodes: new Map(), edges: [], warns: [] });
+    const addN = (g, id, o) => g.nodes.set(id, Object.assign({ id, label: id, sub: '', kind: 'other', cost: 0, pub: false, w: [] }, o));
+    const warn = (g, id, sev, msg) => { const n = g.nodes.get(id); if (n) n.w.push({ sev, msg }); g.warns.push({ label: n ? n.label : id, sev, msg }) };
+    const imgWarn = (g, id, img) => { if (img && (!/:[^/:]+$/.test(img) || /:latest$/.test(img))) warn(g, id, 'info', 'Image “' + img + '” is not pinned to a version') };
 
-/* ---------- Terraform ---------- */
-const EC2={'t2.micro':8.5,'t3.micro':7.6,'t3.small':15,'t3.medium':30,'t3.large':61,'m5.large':70,'m5.xlarge':140};
-const RDS={'db.t3.micro':12,'db.t3.small':25,'db.t3.medium':50,'db.m5.large':125};
-const PORTS={22:'SSH',3389:'RDP',3306:'MySQL',5432:'Postgres',6379:'Redis',27017:'MongoDB',1433:'SQL Server'};
-const tfKind=t=>/db_instance|rds|dynamodb|docdb|redshift/.test(t)?'db':/s3|ebs|efs/.test(t)?'storage':/(^|_)(lb|alb|elb)(_|$)|cloudfront|api_gateway|nat_gateway|eip|route53/.test(t)?'lb':/elasticache/.test(t)?'cache':/sqs|sns|kinesis|_mq/.test(t)?'queue':/instance|lambda|eks|ecs|autoscaling|launch/.test(t)?'compute':/vpc|subnet|security_group|gateway|route/.test(t)?'net':'other';
-function tfCost(t,b,at){
-  if(t==='aws_instance')return EC2[at(b,'instance_type')]||30;
-  if(t==='aws_db_instance')return (RDS[at(b,'instance_class')]||60)+(+at(b,'allocated_storage')||20)*.115;
-  if(/^aws_(lb|alb)$/.test(t))return 22;
-  return({aws_s3_bucket:2,aws_nat_gateway:33,aws_eip:3.6,aws_eks_cluster:73,aws_elasticache_cluster:13,aws_lambda_function:1,aws_sqs_queue:1,aws_cloudfront_distribution:5})[t]??(t==='aws_ebs_volume'?(+at(b,'size')||8)*.08:0);
-}
-function parseTF(src){
-  const g=mk(),res=[],re=/resource\s+"([^"]+)"\s+"([^"]+)"\s*\{/g;let m;
-  while((m=re.exec(src))){let d=1,i=re.lastIndex;while(i<src.length&&d>0){const c=src[i++];if(c==='{')d++;else if(c==='}')d--}
-    res.push({type:m[1],name:m[2],id:m[1]+'.'+m[2],body:src.slice(re.lastIndex,i-1)});re.lastIndex=i}
-  if(!res.length)throw new Error('No resource "type" "name" blocks found.');
-  const at=(b,k)=>{const x=b.match(new RegExp('(?:^|\\s)'+k+'\\s*=\\s*"?([^"\\n]+?)"?\\s*(?:\\n|$)'));return x?x[1].trim():null};
-  res.forEach(r=>addN(g,r.id,{label:r.name,sub:r.type.replace(/^aws_/,''),kind:tfKind(r.type),cost:tfCost(r.type,r.body,at),type:r.type}));
-  res.forEach(r=>res.forEach(o=>{if(r!==o&&new RegExp('\\b'+o.type+'\\.'+o.name+'\\b').test(r.body))g.edges.push([r.id,o.id])}));
-  res.forEach(r=>{const n=g.nodes.get(r.id),b=r.body;
-    if(r.type==='aws_security_group')(b.match(/ingress\s*\{[\s\S]*?\}/g)||[]).forEach(x=>{if(/0\.0\.0\.0\/0/.test(x)){n.pub=true;const p=+at(x,'from_port');warn(g,r.id,PORTS[p]?'crit':'warn',PORTS[p]?PORTS[p]+' (port '+p+') is open to 0.0.0.0/0':'Port '+(p||'all')+' is open to 0.0.0.0/0')}});
-    if(/^aws_(lb|alb)$/.test(r.type)&&at(b,'internal')!=='true')n.pub=true;
-    if(/eip|cloudfront|api_gateway/.test(r.type))n.pub=true;
-    if(at(b,'associate_public_ip_address')==='true')n.pub=true;
-    if(at(b,'publicly_accessible')==='true'){n.pub=true;warn(g,r.id,'crit','Database is publicly accessible')}
-    if(/public-read/.test(at(b,'acl')||'')){n.pub=true;warn(g,r.id,'crit','Bucket ACL allows public read')}
-    if(/\bpassword\s*=\s*"[^"$]{3,}"/.test(b))warn(g,r.id,'warn','Hard-coded password in code')});
-  res.forEach(r=>{if(r.type!=='aws_security_group'&&g.edges.some(([a,b])=>a===r.id&&g.nodes.get(b).type==='aws_security_group'&&g.nodes.get(b).pub))g.nodes.get(r.id).pub=true});
-  return g;
-}
-/* ---------- docker-compose ---------- */
-function parseDC(src){
-  const y=jsyaml.load(src),sv=y&&y.services;if(!sv)throw new Error('No “services:” section found.');
-  const g=mk();
-  Object.entries(sv).forEach(([k,s])=>{s=s||{};const img=s.image||'',ports=s.ports||[];
-    const kind=/postgres|mysql|maria|mongo/.test(img)?'db':/redis|memcache/.test(img)?'cache':/nginx|traefik|caddy|haproxy/.test(img)?'lb':/rabbit|kafka|nats/.test(img)?'queue':'compute';
-    const rep=(s.deploy&&s.deploy.replicas)||1;
-    addN(g,k,{label:k,sub:(img||'build')+(rep>1?' ×'+rep:''),kind,cost:(kind==='db'?15:kind==='cache'?8:10)*rep,pub:ports.length>0});
-    imgWarn(g,k,img);
-    if(kind==='db'&&ports.length)warn(g,k,'crit','Database port is published to the host');
-    if(s.privileged)warn(g,k,'crit','Runs in privileged mode');
-    if(s.network_mode==='host')warn(g,k,'warn','Uses host networking');
-    const env=Array.isArray(s.environment)?Object.fromEntries(s.environment.map(e=>e.split(/=(.*)/s).slice(0,2))):(s.environment||{});
-    if(Object.entries(env).some(([a,b])=>/PASSWORD|SECRET|TOKEN/i.test(a)&&b&&!/^\$/.test(String(b))))warn(g,k,'warn','Secret hard-coded in environment');
-    const dep=Array.isArray(s.depends_on)?s.depends_on:Object.keys(s.depends_on||{});
-    dep.concat((s.links||[]).map(l=>l.split(':')[0])).forEach(d=>g.edges.push([k,d]));
-  });
-  g.edges=g.edges.filter(([a,b])=>g.nodes.has(b));return g;
-}
-/* ---------- Kubernetes ---------- */
-function parseK8(src){
-  const docs=jsyaml.loadAll(src).filter(d=>d&&d.kind),g=mk();
-  if(!docs.length)throw new Error('No Kubernetes objects (kind:) found.');
-  const wl=docs.filter(d=>/^(Deployment|StatefulSet|DaemonSet)$/.test(d.kind));
-  const id=d=>d.kind+'/'+d.metadata.name;
-  wl.forEach(d=>{const t=(d.spec&&d.spec.template)||{},cs=(t.spec&&t.spec.containers)||[],rep=d.kind==='DaemonSet'?3:(d.spec.replicas??1);
-    addN(g,id(d),{label:d.metadata.name,sub:d.kind+' ×'+rep,kind:/postgres|mysql|mongo/.test(JSON.stringify(cs))?'db':'compute',cost:rep*12});
-    cs.forEach(c=>{imgWarn(g,id(d),c.image);if(c.securityContext&&c.securityContext.privileged)warn(g,id(d),'crit','Container “'+c.name+'” runs privileged')});
-    if(t.spec&&t.spec.hostNetwork)warn(g,id(d),'warn','Uses host networking')});
-  docs.forEach(d=>{const n=d.metadata.name,sp=d.spec||{};
-    if(d.kind==='Service'){const lb=/LoadBalancer|NodePort/.test(sp.type||'');
-      addN(g,id(d),{label:n,sub:'Service '+(sp.type||'ClusterIP'),kind:lb?'lb':'net',cost:sp.type==='LoadBalancer'?18:0,pub:lb});
-      if(lb)warn(g,id(d),'warn','Exposed outside the cluster via '+sp.type);
-      wl.forEach(w=>{const lab=(((w.spec||{}).template||{}).metadata||{}).labels||{},sel=sp.selector||{};
-        if(Object.keys(sel).length&&Object.entries(sel).every(([k,v])=>lab[k]===v))g.edges.push([id(d),id(w)])})}
-    if(d.kind==='Ingress'){addN(g,id(d),{label:n,sub:'Ingress',kind:'lb',cost:18,pub:true});
-      if(!sp.tls)warn(g,id(d),'warn','Ingress has no TLS configured');
-      (sp.rules||[]).forEach(r=>((r.http||{}).paths||[]).forEach(p=>{const s=p.backend&&(p.backend.service?p.backend.service.name:p.backend.serviceName);if(s)g.edges.push([id(d),'Service/'+s])}))}
-    if(d.kind==='PersistentVolumeClaim')addN(g,id(d),{label:n,sub:'PVC',kind:'storage',cost:(parseFloat((((sp.resources||{}).requests)||{}).storage)||10)*.1})});
-  g.edges=g.edges.filter(([a,b])=>g.nodes.has(a)&&g.nodes.has(b));return g;
-}
-/* ---------- layout & render ---------- */
-const W=190,H=60,GX=90,GY=26;
-function finish(g){
-  if([...g.nodes.values()].some(n=>n.pub)){addN(g,'__net',{label:'Internet',kind:'net',net:true,sub:'public traffic'});
-    g.nodes.forEach(n=>{if(n.pub&&!n.net&&n.type!=='aws_security_group')g.edges.push(['__net',n.id,1])})}
-  const L=new Map([...g.nodes.keys()].map(k=>[k,0])),N=g.nodes.size;
-  for(let i=0;i<N;i++){let ch=false;g.edges.forEach(([a,b])=>{if(L.get(b)<=L.get(a)&&L.get(a)<N){L.set(b,L.get(a)+1);ch=true}});if(!ch)break}
-  const cols=[];g.nodes.forEach((n,k)=>{(cols[L.get(k)]=cols[L.get(k)]||[]).push(n)});
-  let mx=0;const bar=n=>{const p=g.edges.filter(e=>e[1]===n.id).map(e=>g.nodes.get(e[0]).y).filter(v=>v!=null);return p.length?p.reduce((a,b)=>a+b)/p.length:0};
-  cols.forEach((c,ci)=>{if(!c)return;if(ci)c.sort((a,b)=>bar(a)-bar(b));c.forEach((n,i)=>{n.x=ci*(W+GX);n.y=i*(H+GY)});mx=Math.max(mx,c.length)});
-  cols.forEach(c=>{if(!c)return;const o=(mx-c.length)*(H+GY)/2;c.forEach(n=>n.y+=o)});
-  g.w=cols.length*(W+GX)-GX;g.h=mx*(H+GY)-GY;return g;
-}
-const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
-function draw(g,vbx,full){
-  const th={cv:css('--cv'),card:css('--surface'),ink:css('--ink'),mute:css('--mute'),line:css('--line'),crit:'#dc2626',warn:'#d97706'};
-  const P=40,x0=-P,y0=-P,w=g.w+2*P,h=g.h+2*P,v=full||!vbx?[x0,y0,w,h]:vbx;
-  let s=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="${v.join(' ')}"${full?` width="${w}" height="${h}"`:''} font-family="system-ui,-apple-system,Segoe UI,sans-serif">
-<defs>${[['a',th.mute],['r',th.crit]].map(([i,c])=>`<marker id="${i}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="${c}"/></marker>`).join('')}</defs>
-<rect x="${x0-5000}" y="${y0-5000}" width="${w+10000}" height="${h+10000}" fill="${th.cv}"/>`;
-  g.edges.forEach(([a,b,ex])=>{const A=g.nodes.get(a),B=g.nodes.get(b),x1=A.x+W,y1=A.y+H/2,x2=B.x,y2=B.y+H/2,dx=Math.max(30,(x2-x1)/2);
-    s+=`<path d="M${x1} ${y1}C${x1+dx} ${y1} ${x2-dx} ${y2} ${x2} ${y2}" fill="none" stroke="${ex?th.crit:th.mute}" stroke-width="${ex?1.8:1.3}" ${ex?'stroke-dasharray="6 4"':'opacity=".75"'} marker-end="url(#${ex?'r':'a'})"/>`});
-  g.nodes.forEach(n=>{const c=KC[n.kind],cr=n.w.some(x=>x.sev==='crit');
-    s+=`<g><title>${esc(n.label+' — '+n.sub+(n.cost?' — ~$'+n.cost.toFixed(0)+'/mo':'')+n.w.map(x=>'\n⚠ '+x.msg).join(''))}</title>
-<rect x="${n.x}" y="${n.y}" width="${W}" height="${H}" rx="11" fill="${th.card}" stroke="${n.w.length?(cr?th.crit:th.warn):th.line}" stroke-width="${n.w.length?2:1.2}"/>
+    /* ---------- Terraform ---------- */
+    const EC2 = { 't2.micro': 8.5, 't3.micro': 7.6, 't3.small': 15, 't3.medium': 30, 't3.large': 61, 'm5.large': 70, 'm5.xlarge': 140 };
+    const RDS = { 'db.t3.micro': 12, 'db.t3.small': 25, 'db.t3.medium': 50, 'db.m5.large': 125 };
+    const PORTS = { 22: 'SSH', 3389: 'RDP', 3306: 'MySQL', 5432: 'Postgres', 6379: 'Redis', 27017: 'MongoDB', 1433: 'SQL Server' };
+    const tfKind = t => /db_instance|rds|dynamodb|docdb|redshift/.test(t) ? 'db' : /s3|ebs|efs/.test(t) ? 'storage' : /(^|_)(lb|alb|elb)(_|$)|cloudfront|api_gateway|nat_gateway|eip|route53/.test(t) ? 'lb' : /elasticache/.test(t) ? 'cache' : /sqs|sns|kinesis|_mq/.test(t) ? 'queue' : /instance|lambda|eks|ecs|autoscaling|launch/.test(t) ? 'compute' : /vpc|subnet|security_group|gateway|route/.test(t) ? 'net' : 'other';
+    function tfCost(t, b, at) {
+      if (t === 'aws_instance') return EC2[at(b, 'instance_type')] || 30;
+      if (t === 'aws_db_instance') return (RDS[at(b, 'instance_class')] || 60) + (+at(b, 'allocated_storage') || 20) * .115;
+      if (/^aws_(lb|alb)$/.test(t)) return 22;
+      return ({ aws_s3_bucket: 2, aws_nat_gateway: 33, aws_eip: 3.6, aws_eks_cluster: 73, aws_elasticache_cluster: 13, aws_lambda_function: 1, aws_sqs_queue: 1, aws_cloudfront_distribution: 5 })[t] ?? (t === 'aws_ebs_volume' ? (+at(b, 'size') || 8) * .08 : 0);
+    }
+    function parseTF(src) {
+      const g = mk(), res = [], re = /resource\s+"([^"]+)"\s+"([^"]+)"\s*\{/g; let m;
+      while ((m = re.exec(src))) {
+        let d = 1, i = re.lastIndex; while (i < src.length && d > 0) { const c = src[i++]; if (c === '{') d++; else if (c === '}') d-- }
+        res.push({ type: m[1], name: m[2], id: m[1] + '.' + m[2], body: src.slice(re.lastIndex, i - 1) }); re.lastIndex = i
+      }
+      if (!res.length) throw new Error('No resource "type" "name" blocks found.');
+      const at = (b, k) => { const x = b.match(new RegExp('(?:^|\\s)' + k + '\\s*=\\s*"?([^"\\n]+?)"?\\s*(?:\\n|$)')); return x ? x[1].trim() : null };
+      res.forEach(r => addN(g, r.id, { label: r.name, sub: r.type.replace(/^aws_/, ''), kind: tfKind(r.type), cost: tfCost(r.type, r.body, at), type: r.type }));
+      res.forEach(r => res.forEach(o => { if (r !== o && new RegExp('\\b' + o.type + '\\.' + o.name + '\\b').test(r.body)) g.edges.push([r.id, o.id]) }));
+      res.forEach(r => {
+        const n = g.nodes.get(r.id), b = r.body;
+        if (r.type === 'aws_security_group') (b.match(/ingress\s*\{[\s\S]*?\}/g) || []).forEach(x => { if (/0\.0\.0\.0\/0/.test(x)) { n.pub = true; const p = +at(x, 'from_port'); warn(g, r.id, PORTS[p] ? 'crit' : 'warn', PORTS[p] ? PORTS[p] + ' (port ' + p + ') is open to 0.0.0.0/0' : 'Port ' + (p || 'all') + ' is open to 0.0.0.0/0') } });
+        if (/^aws_(lb|alb)$/.test(r.type) && at(b, 'internal') !== 'true') n.pub = true;
+        if (/eip|cloudfront|api_gateway/.test(r.type)) n.pub = true;
+        if (at(b, 'associate_public_ip_address') === 'true') n.pub = true;
+        if (at(b, 'publicly_accessible') === 'true') { n.pub = true; warn(g, r.id, 'crit', 'Database is publicly accessible') }
+        if (/public-read/.test(at(b, 'acl') || '')) { n.pub = true; warn(g, r.id, 'crit', 'Bucket ACL allows public read') }
+        if (/\bpassword\s*=\s*"[^"$]{3,}"/.test(b)) warn(g, r.id, 'warn', 'Hard-coded password in code')
+      });
+      res.forEach(r => { if (r.type !== 'aws_security_group' && g.edges.some(([a, b]) => a === r.id && g.nodes.get(b).type === 'aws_security_group' && g.nodes.get(b).pub)) g.nodes.get(r.id).pub = true });
+      return g;
+    }
+    /* ---------- docker-compose ---------- */
+    function parseDC(src) {
+      const y = jsyaml.load(src), sv = y && y.services; if (!sv) throw new Error('No “services:” section found.');
+      const g = mk();
+      Object.entries(sv).forEach(([k, s]) => {
+        s = s || {}; const img = s.image || '', ports = s.ports || [];
+        const kind = /postgres|mysql|maria|mongo/.test(img) ? 'db' : /redis|memcache/.test(img) ? 'cache' : /nginx|traefik|caddy|haproxy/.test(img) ? 'lb' : /rabbit|kafka|nats/.test(img) ? 'queue' : 'compute';
+        const rep = (s.deploy && s.deploy.replicas) || 1;
+        addN(g, k, { label: k, sub: (img || 'build') + (rep > 1 ? ' ×' + rep : ''), kind, cost: (kind === 'db' ? 15 : kind === 'cache' ? 8 : 10) * rep, pub: ports.length > 0 });
+        imgWarn(g, k, img);
+        if (kind === 'db' && ports.length) warn(g, k, 'crit', 'Database port is published to the host');
+        if (s.privileged) warn(g, k, 'crit', 'Runs in privileged mode');
+        if (s.network_mode === 'host') warn(g, k, 'warn', 'Uses host networking');
+        const env = Array.isArray(s.environment) ? Object.fromEntries(s.environment.map(e => e.split(/=(.*)/s).slice(0, 2))) : (s.environment || {});
+        if (Object.entries(env).some(([a, b]) => /PASSWORD|SECRET|TOKEN/i.test(a) && b && !/^\$/.test(String(b)))) warn(g, k, 'warn', 'Secret hard-coded in environment');
+        const dep = Array.isArray(s.depends_on) ? s.depends_on : Object.keys(s.depends_on || {});
+        dep.concat((s.links || []).map(l => l.split(':')[0])).forEach(d => g.edges.push([k, d]));
+      });
+      g.edges = g.edges.filter(([a, b]) => g.nodes.has(b)); return g;
+    }
+    /* ---------- Kubernetes ---------- */
+    function parseK8(src) {
+      const docs = jsyaml.loadAll(src).filter(d => d && d.kind), g = mk();
+      if (!docs.length) throw new Error('No Kubernetes objects (kind:) found.');
+      const wl = docs.filter(d => /^(Deployment|StatefulSet|DaemonSet)$/.test(d.kind));
+      const id = d => d.kind + '/' + d.metadata.name;
+      wl.forEach(d => {
+        const t = (d.spec && d.spec.template) || {}, cs = (t.spec && t.spec.containers) || [], rep = d.kind === 'DaemonSet' ? 3 : (d.spec.replicas ?? 1);
+        addN(g, id(d), { label: d.metadata.name, sub: d.kind + ' ×' + rep, kind: /postgres|mysql|mongo/.test(JSON.stringify(cs)) ? 'db' : 'compute', cost: rep * 12 });
+        cs.forEach(c => { imgWarn(g, id(d), c.image); if (c.securityContext && c.securityContext.privileged) warn(g, id(d), 'crit', 'Container “' + c.name + '” runs privileged') });
+        if (t.spec && t.spec.hostNetwork) warn(g, id(d), 'warn', 'Uses host networking')
+      });
+      docs.forEach(d => {
+        const n = d.metadata.name, sp = d.spec || {};
+        if (d.kind === 'Service') {
+          const lb = /LoadBalancer|NodePort/.test(sp.type || '');
+          addN(g, id(d), { label: n, sub: 'Service ' + (sp.type || 'ClusterIP'), kind: lb ? 'lb' : 'net', cost: sp.type === 'LoadBalancer' ? 18 : 0, pub: lb });
+          if (lb) warn(g, id(d), 'warn', 'Exposed outside the cluster via ' + sp.type);
+          wl.forEach(w => {
+            const lab = (((w.spec || {}).template || {}).metadata || {}).labels || {}, sel = sp.selector || {};
+            if (Object.keys(sel).length && Object.entries(sel).every(([k, v]) => lab[k] === v)) g.edges.push([id(d), id(w)])
+          })
+        }
+        if (d.kind === 'Ingress') {
+          addN(g, id(d), { label: n, sub: 'Ingress', kind: 'lb', cost: 18, pub: true });
+          if (!sp.tls) warn(g, id(d), 'warn', 'Ingress has no TLS configured');
+          (sp.rules || []).forEach(r => ((r.http || {}).paths || []).forEach(p => { const s = p.backend && (p.backend.service ? p.backend.service.name : p.backend.serviceName); if (s) g.edges.push([id(d), 'Service/' + s]) }))
+        }
+        if (d.kind === 'PersistentVolumeClaim') addN(g, id(d), { label: n, sub: 'PVC', kind: 'storage', cost: (parseFloat((((sp.resources || {}).requests) || {}).storage) || 10) * .1 })
+      });
+      g.edges = g.edges.filter(([a, b]) => g.nodes.has(a) && g.nodes.has(b)); return g;
+    }
+    /* ---------- layout & render ---------- */
+    const W = 190, H = 60, GX = 90, GY = 26;
+    function finish(g) {
+      if ([...g.nodes.values()].some(n => n.pub)) {
+        addN(g, '__net', { label: 'Internet', kind: 'net', net: true, sub: 'public traffic' });
+        g.nodes.forEach(n => { if (n.pub && !n.net && n.type !== 'aws_security_group') g.edges.push(['__net', n.id, 1]) })
+      }
+      const L = new Map([...g.nodes.keys()].map(k => [k, 0])), N = g.nodes.size;
+      for (let i = 0; i < N; i++) { let ch = false; g.edges.forEach(([a, b]) => { if (L.get(b) <= L.get(a) && L.get(a) < N) { L.set(b, L.get(a) + 1); ch = true } }); if (!ch) break }
+      const cols = []; g.nodes.forEach((n, k) => { (cols[L.get(k)] = cols[L.get(k)] || []).push(n) });
+      let mx = 0; const bar = n => { const p = g.edges.filter(e => e[1] === n.id).map(e => g.nodes.get(e[0]).y).filter(v => v != null); return p.length ? p.reduce((a, b) => a + b) / p.length : 0 };
+      cols.forEach((c, ci) => { if (!c) return; if (ci) c.sort((a, b) => bar(a) - bar(b)); c.forEach((n, i) => { n.x = ci * (W + GX); n.y = i * (H + GY) }); mx = Math.max(mx, c.length) });
+      cols.forEach(c => { if (!c) return; const o = (mx - c.length) * (H + GY) / 2; c.forEach(n => n.y += o) });
+      g.w = cols.length * (W + GX) - GX; g.h = mx * (H + GY) - GY; return g;
+    }
+    const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+    function draw(g, vbx, full) {
+      const th = { cv: css('--cv'), card: css('--panel'), ink: css('--ink'), mute: css('--mute'), line: css('--line'), crit: css('--crit'), warn: css('--warn'), on: css('--on'), sans: css('--sans') };
+      const P = 40, x0 = -P, y0 = -P, w = g.w + 2 * P, h = g.h + 2 * P, v = full || !vbx ? [x0, y0, w, h] : vbx;
+      let s = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${v.join(' ')}"${full ? ` width="${w}" height="${h}"` : ''} font-family="${th.sans}">
+<defs>${[['a', th.mute], ['r', th.crit]].map(([i, c]) => `<marker id="${i}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="${c}"/></marker>`).join('')}</defs>
+${full ? `<rect x="${x0}" y="${y0}" width="${w}" height="${h}" fill="${th.cv}"/>` : ''}`;
+      g.edges.forEach(([a, b, ex]) => {
+        const A = g.nodes.get(a), B = g.nodes.get(b), x1 = A.x + W, y1 = A.y + H / 2, x2 = B.x, y2 = B.y + H / 2, dx = Math.max(30, (x2 - x1) / 2);
+        s += `<path d="M${x1} ${y1}C${x1 + dx} ${y1} ${x2 - dx} ${y2} ${x2} ${y2}" fill="none" stroke="${ex ? th.crit : th.mute}" stroke-width="${ex ? 1.8 : 1.3}" ${ex ? 'stroke-dasharray="6 4"' : 'opacity=".75"'} marker-end="url(#${ex ? 'r' : 'a'})"/>`
+      });
+      g.nodes.forEach(n => {
+        const c = KC(n.kind), cr = n.w.some(x => x.sev === 'crit');
+        s += `<g><title>${esc(n.label + ' — ' + n.sub + (n.cost ? ' — ~$' + n.cost.toFixed(0) + '/mo' : '') + n.w.map(x => '\n⚠ ' + x.msg).join(''))}</title>
+<rect x="${n.x}" y="${n.y}" width="${W}" height="${H}" rx="11" fill="${th.card}" stroke="${n.w.length ? (cr ? th.crit : th.warn) : th.line}" stroke-width="${n.w.length ? 2 : 1.2}"/>
 <rect x="${n.x}" y="${n.y}" width="6" height="${H}" rx="3" fill="${c}"/>
-<text x="${n.x+18}" y="${n.y+25}" font-size="13.5" font-weight="600" fill="${th.ink}">${esc(n.label.slice(0,22))}</text>
-<text x="${n.x+18}" y="${n.y+43}" font-size="11" fill="${th.mute}">${esc(n.sub.slice(0,26))}</text>
-${n.cost?`<text x="${n.x+W-10}" y="${n.y+H-10}" font-size="11" font-weight="600" text-anchor="end" fill="${th.mute}">$${n.cost.toFixed(0)}</text>`:''}
-${n.w.length?`<circle cx="${n.x+W}" cy="${n.y}" r="10" fill="${cr?th.crit:th.warn}"/><text x="${n.x+W}" y="${n.y+4}" font-size="11" font-weight="700" text-anchor="middle" fill="#fff">${n.w.length}</text>`:''}</g>`});
-  return {m:s+'</svg>',w,h};
-}
-/* ---------- app ---------- */
-let mode='tf',G=null,vb=null,dl=null;
-const PARSE={tf:parseTF,dc:parseDC,k8:parseK8};
-function detect(t){return /resource\s+"/.test(t)?'tf':/^\s*services\s*:/m.test(t)?'dc':/^\s*kind\s*:/m.test(t)?'k8':mode}
-function run(fit){
-  const t=$('#src').value;let g;
-  try{const m=detect(t);if(m!==mode){mode=m;mark()}g=finish(PARSE[mode](t));$('#err').style.display='none'}
-  catch(e){$('#err').textContent=e.message;$('#err').style.display='block';return}
-  G=g;if(fit||!vb)vb=[-40,-40,g.w+80,g.h+80];paint();summary();
-}
-function paint(){const el=$('#canvas'),h=el.querySelector('.hint');el.innerHTML=draw(G,vb).m;el.appendChild(h)}
-function summary(){
-  const ns=[...G.nodes.values()].filter(n=>n.cost>0).sort((a,b)=>b.cost-a.cost),tot=ns.reduce((a,n)=>a+n.cost,0),top=ns[0]?ns[0].cost:1;
-  $('#cost').innerHTML=`<div class="big">$${tot.toFixed(0)} <small>/ month</small></div><div class="mut" style="margin:2px 0 10px">Rough on-demand estimate (us-east-1 style pricing), not a quote.</div>`+
-   ns.slice(0,8).map(n=>`<div class="cr"><span>${esc(n.label)} <span class="mut">${esc(n.sub)}</span></span><span style="text-align:right">$${n.cost.toFixed(0)}</span><div class="bar"><i style="width:${n.cost/top*100}%"></i></div></div>`).join('');
-  const o={crit:0,warn:1,info:2},ws=[...G.warns].sort((a,b)=>o[a.sev]-o[b.sev]),c=k=>ws.filter(x=>x.sev===k).length;
-  $('#finds').innerHTML=ws.length?`<div class="mut" style="margin-bottom:6px">${c('crit')} critical · ${c('warn')} warnings · ${c('info')} notes</div>`+ws.map(x=>`<div class="fi"><span class="tag t-${x.sev}">${x.sev==='crit'?'critical':x.sev}</span><div><b>${esc(x.label)}</b><div class="mut">${esc(x.msg)}</div></div></div>`).join(''):'<div class="mut">No exposure issues detected. Nice.</div>';
-}
-function mark(){document.querySelectorAll('[data-s]').forEach(b=>b.classList.toggle('on',b.dataset.s===mode))}
-document.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>{mode=b.dataset.s;$('#src').value=SAMPLES[mode];mark();run(true)});
-let tm;$('#src').addEventListener('input',()=>{clearTimeout(tm);tm=setTimeout(()=>run(false),250)});
-$('#fit').onclick=()=>{if(G){vb=[-40,-40,G.w+80,G.h+80];paint()}};
-const cv=$('#canvas');let drag=null;
-cv.addEventListener('wheel',e=>{if(!G)return;e.preventDefault();const r=cv.getBoundingClientRect(),f=e.deltaY>0?1.12:1/1.12,px=(e.clientX-r.left)/r.width,py=(e.clientY-r.top)/r.height;
-  vb=[vb[0]+vb[2]*px*(1-f),vb[1]+vb[3]*py*(1-f),vb[2]*f,vb[3]*f];cv.querySelector('svg').setAttribute('viewBox',vb.join(' '))},{passive:false});
-cv.addEventListener('pointerdown',e=>{drag={x:e.clientX,y:e.clientY,vb:[...vb]};cv.setPointerCapture(e.pointerId)});
-cv.addEventListener('pointermove',e=>{if(!drag)return;const r=cv.getBoundingClientRect(),k=Math.max(drag.vb[2]/r.width,drag.vb[3]/r.height);
-  vb=[drag.vb[0]-(e.clientX-drag.x)*k,drag.vb[1]-(e.clientY-drag.y)*k,drag.vb[2],drag.vb[3]];cv.querySelector('svg').setAttribute('viewBox',vb.join(' '))});
-cv.addEventListener('pointerup',()=>drag=null);
-matchMedia('(prefers-color-scheme:dark)').addEventListener('change',()=>G&&paint());
-/* export */
-async function save(name,data){if(!dl)return;try{await dl.save({filename:name,data})}catch(e){}}
-$('#esvg').onclick=()=>save('architecture.svg',new Blob([draw(G,null,true).m],{type:'image/svg+xml'}));
-$('#epng').onclick=()=>{const {m,w,h}=draw(G,null,true),im=new Image();
-  im.onload=()=>{const c=document.createElement('canvas');c.width=w*2;c.height=h*2;const x=c.getContext('2d');x.scale(2,2);x.drawImage(im,0,0,w,h);c.toBlob(b=>b&&save('architecture.png',b))};
-  im.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(m)};
-try{window.claude&&claude.use('downloads').then(d=>{dl=d;if(d)['#esvg','#epng'].forEach(s=>$(s).disabled=false)}).catch(()=>{})}catch(e){}
-$('#src').value=SAMPLES.tf;run(true);
-</script>
+<text x="${n.x + 18}" y="${n.y + 25}" font-size="13.5" font-weight="600" fill="${th.ink}">${esc(n.label.slice(0, 22))}</text>
+<text x="${n.x + 18}" y="${n.y + 43}" font-size="11" fill="${th.mute}">${esc(n.sub.slice(0, 26))}</text>
+${n.cost ? `<text x="${n.x + W - 10}" y="${n.y + H - 10}" font-size="11" font-weight="600" text-anchor="end" fill="${th.mute}">$${n.cost.toFixed(0)}</text>` : ''}
+${n.w.length ? `<circle cx="${n.x + W}" cy="${n.y}" r="10" fill="${cr ? th.crit : th.warn}"/><text x="${n.x + W}" y="${n.y + 4}" font-size="11" font-weight="700" text-anchor="middle" fill="${th.on}">${n.w.length}</text>` : ''}</g>`
+      });
+      return { m: s + '</svg>', w, h };
+    }
+    /* ---------- app ---------- */
+    let mode = 'tf', G = null, vb = null, dl = null;
+    const PARSE = { tf: parseTF, dc: parseDC, k8: parseK8 };
+    function detect(t) { return /resource\s+"/.test(t) ? 'tf' : /^\s*services\s*:/m.test(t) ? 'dc' : /^\s*kind\s*:/m.test(t) ? 'k8' : mode }
+    function run(fit) {
+      const t = $('#src').value; let g;
+      if (!t.trim()) { G = null; vb = null; $('#err').style.display = 'none'; $('#canvas').querySelector('svg')?.remove(); $('#empty').hidden = false; $('#cost').innerHTML = ''; $('#finds').innerHTML = ''; return }
+      $('#empty').hidden = true;
+      try { const m = detect(t); if (m !== mode) { mode = m; mark() } g = finish(PARSE[mode](t)); $('#err').style.display = 'none' }
+      catch (e) { $('#err').textContent = e.message; $('#err').style.display = 'block'; return }
+      G = g; if (fit || !vb) vb = [-40, -40, g.w + 80, g.h + 80]; paint(fit); summary();
+    }
+    function paint(anim) { const el = $('#canvas'); el.querySelector('svg')?.remove(); el.insertAdjacentHTML('afterbegin', draw(G, vb).m); if (anim) el.querySelector('svg').classList.add('enter') }
+    function summary() {
+      const ns = [...G.nodes.values()].filter(n => n.cost > 0).sort((a, b) => b.cost - a.cost), tot = ns.reduce((a, n) => a + n.cost, 0), top = ns[0] ? ns[0].cost : 1;
+      $('#cost').innerHTML = `<div class="big">$${Math.round(tot).toLocaleString('en-US')}<span>per month</span></div><p class="mut" style="margin-bottom:14px">Rough on-demand estimate, not a quote.</p>` +
+        ns.slice(0, 7).map(n => `<div class="cr"><span class="nm">${esc(n.label)}<small>${esc(n.sub)}</small></span><span class="amt">$${n.cost.toFixed(0)}</span><i style="width:${n.cost / top * 100}%"></i></div>`).join('');
+      const o = { crit: 0, warn: 1, info: 2 }, nm = { crit: 'Critical', warn: 'Warning', info: 'Note' }, ws = [...G.warns].sort((a, b) => o[a.sev] - o[b.sev]), c = k => ws.filter(x => x.sev === k).length;
+      $('#finds').innerHTML = ws.length ? `<p class="mut" style="margin:0 0 6px">${c('crit')} critical, ${c('warn')} warnings, ${c('info')} notes</p>` + ws.map(x => `<div class="fi"><span class="s s-${x.sev}">${nm[x.sev]}</span><div><b>${esc(x.label)}</b><p>${esc(x.msg)}</p></div></div>`).join('') : '<p class="mut">No exposure issues found.</p>';
+    }
+    const FN = { tf: 'main.tf', dc: 'docker-compose.yml', k8: 'manifests.yaml' };
+    function mark() { document.querySelectorAll('[data-s]').forEach(b => { const on = b.dataset.s === mode; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on) }); $('#fn').textContent = FN[mode] }
+    document.querySelectorAll('[data-s]').forEach(b => b.onclick = () => { mode = b.dataset.s; $('#src').value = SAMPLES[mode]; mark(); run(true) });
+    let tm; $('#src').addEventListener('input', () => { clearTimeout(tm); tm = setTimeout(() => run(false), 250) });
+    $('#fit').onclick = () => { if (G) { vb = [-40, -40, G.w + 80, G.h + 80]; paint(true) } };
+    const cv = $('#canvas'); let drag = null;
+    cv.addEventListener('wheel', e => {
+      if (!G) return; e.preventDefault(); const r = cv.getBoundingClientRect(), f = e.deltaY > 0 ? 1.12 : 1 / 1.12, px = (e.clientX - r.left) / r.width, py = (e.clientY - r.top) / r.height;
+      vb = [vb[0] + vb[2] * px * (1 - f), vb[1] + vb[3] * py * (1 - f), vb[2] * f, vb[3] * f]; cv.querySelector('svg').setAttribute('viewBox', vb.join(' '))
+    }, { passive: false });
+    cv.addEventListener('pointerdown', e => { if (!G) return; drag = { x: e.clientX, y: e.clientY, vb: [...vb] }; cv.setPointerCapture(e.pointerId) });
+    cv.addEventListener('pointermove', e => {
+      if (!drag) return; const r = cv.getBoundingClientRect(), k = Math.max(drag.vb[2] / r.width, drag.vb[3] / r.height);
+      vb = [drag.vb[0] - (e.clientX - drag.x) * k, drag.vb[1] - (e.clientY - drag.y) * k, drag.vb[2], drag.vb[3]]; cv.querySelector('svg').setAttribute('viewBox', vb.join(' '))
+    });
+    cv.addEventListener('pointerup', () => drag = null);
+    function zoom(f) { if (!G) return; const cx = vb[0] + vb[2] / 2, cy = vb[1] + vb[3] / 2; vb = [cx - vb[2] * f / 2, cy - vb[3] * f / 2, vb[2] * f, vb[3] * f]; cv.querySelector('svg').setAttribute('viewBox', vb.join(' ')) }
+    $('#zin').onclick = () => zoom(1 / 1.25); $('#zout').onclick = () => zoom(1.25);
+    matchMedia('(prefers-color-scheme:dark)').addEventListener('change', () => G && paint());
+    /* export */
+    async function save(name, data) { if (!dl) return; try { await dl.save({ filename: name, data }) } catch (e) { } }
+    $('#esvg').onclick = () => save('architecture.svg', new Blob([draw(G, null, true).m], { type: 'image/svg+xml' }));
+    $('#epng').onclick = () => {
+      const { m, w, h } = draw(G, null, true), im = new Image();
+      im.onload = () => { const c = document.createElement('canvas'); c.width = w * 2; c.height = h * 2; const x = c.getContext('2d'); x.scale(2, 2); x.drawImage(im, 0, 0, w, h); c.toBlob(b => b && save('architecture.png', b)) };
+      im.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(m)
+    };
+    try { window.claude && claude.use('downloads').then(d => { dl = d; if (d) ['#esvg', '#epng'].forEach(s => $(s).disabled = false) }).catch(() => { }) } catch (e) { }
+    $('#src').value = SAMPLES.tf; mark(); run(true);
+  </script>
 </body>
+
 </html>
